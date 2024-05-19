@@ -1,5 +1,6 @@
-.venv
-__pycache__
-masks
-studies
-resized
+.venv/
+__pycache__/
+masks/
+studies/
+resized/
+yolo/

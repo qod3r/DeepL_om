@@ -40,6 +40,23 @@ def make_dataset(studies_folder, masks_folder):
 
     return linked_paths
 
+def get_existing():
+    # Получаем пути к папкам с исследованиями и масками.
+    masks_folder = "data/masks/"
+    linked_paths = []
+    for i in range(5):
+        studies_folder = f"data/studies/CT-{i}"
+        # Создаем набор данных.
+        linked_paths.append(make_dataset(studies_folder, masks_folder))
+
+    # Печатаем длину набора данных.
+    existing = []
+    for paths in linked_paths[1]:
+        if paths[1]:
+            existing.append(paths)
+    
+    return existing
+
 if __name__ == "__main__":
     # Получаем пути к папкам с исследованиями и масками.
     masks_folder = "data/masks/"
@@ -50,6 +67,9 @@ if __name__ == "__main__":
         linked_paths.append(make_dataset(studies_folder, masks_folder))
 
     # Печатаем длину набора данных.
+    for paths in linked_paths[1]:
+        if paths[1]:
+            print(paths)
     for i in range(5):
         print(f"CT-{i} содержит {sum([1 if a[1] is not None else 0 for a in linked_paths[i]])} связанных пар КТ-снимков и масок.")
         print(f"CT-{i} содержит {sum([0 if a[1] is not None else 1 for a in linked_paths[i]])} КТ-снимков без маски.")
