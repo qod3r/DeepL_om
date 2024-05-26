@@ -4,3 +4,5 @@ masks/
 studies/
 resized/
 yolo/
+backend/venv
+.env
