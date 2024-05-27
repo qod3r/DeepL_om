@@ -1,4 +1,4 @@
-from pydantic import BaseModel
+from pydantic import BaseModel, SecretStr
 from typing import Optional
 
 class UpdateUserSchema(BaseModel):
@@ -23,5 +23,22 @@ class UpdateUserSchema(BaseModel):
                 "password": "hasshed_password"
             }
         }
+
+class SUserAuth(BaseModel):
+    username: str
+    password: str
+
+    class Collection:
+        name = "users"
+
+    class Config:
+        json_schema_extra = {
+            "example": {
+                "username": "username",
+                "password": "hasshed_password",
+            }
+        }
+
+
 
 

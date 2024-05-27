@@ -2,6 +2,7 @@ from datetime import datetime, timezone, timedelta
 from passlib.context import CryptContext
 from jose import jwt
 from app.config import settings
+from app.users.dao import UsersDAO
 
 pwd_context = CryptContext(schemes=['bcrypt'], deprecated='auto')
 
@@ -23,9 +24,9 @@ def create_access_token(data: dict) -> str:
 
 
 async def authenticate_user(username: str, password: str):
-    # user = await UsersDAO.find_one_or_none(username=username)
-    #TODO: create find_one_or_none function for users
-    if not user or not verify_password(password, user.password):
-        return None
-    return user
-
+    user = await UsersDAO.find_one_or_none(username=username)
+    if user is not None:
+        if verify_password(password, user.password):
+            return user
+    return None
+    
