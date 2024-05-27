@@ -1,8 +1,9 @@
-from fastapi import APIRouter, Response
+from fastapi import APIRouter, Depends, Response
 from app.users.dao import UsersDAO
 from app.database import motor_client
 from bson.json_util import dumps
 
+from app.users.dependencies import get_current_user
 from app.users.schemas import SUserAuth
 from app.users.auth import authenticate_user, create_access_token, get_password_hash
 from fastapi import HTTPException, status
@@ -15,22 +16,8 @@ router = APIRouter(
 
 @router.get("/info")
 #TODO: get current user info
-async def get_user_info(name: str):
-    user_data = await UsersDAO.find_one_or_none(name=name)
-    if user_data:
-        return {
-            "status_code": 200,
-            "response_type": "success",
-            "description": "Пользователь найден",
-            "data": user_data,
-        }
-    else:
-        return {
-            "status_code": 200,
-            "response_type": "success",
-            "description": "Пользователь НЕ найден",
-            "data": None,
-        }
+async def get_user_info(current_user: User = Depends(get_current_user)):
+    return current_user
 
 @router.post("/reg")
 async def register_user(user_data: User):
