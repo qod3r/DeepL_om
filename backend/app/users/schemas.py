@@ -1,15 +1,19 @@
 from pydantic import BaseModel
+from typing import Optional
 
-class User(BaseModel):
-    username: str 
-    lastname: str 
-    name: str 
-    patronymic: str 
-    post: str 
-    password: str 
+class UpdateUserSchema(BaseModel):
+    username: Optional[str]
+    lastname: Optional[str] 
+    name: Optional[str] 
+    patronymic: Optional[str] 
+    post: Optional[str] 
+    password: Optional[str]
+
+    class Collection:
+        name = "users"
 
     class Config:
-        schema_extra = {
+        json_schema_extra = {
             "example": {
                 "username": "user1",
                 "lastname": "Иванов",

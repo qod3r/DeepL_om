@@ -1,5 +1,5 @@
 import motor.motor_asyncio
-from config import settings
+from app.config import settings
 import asyncio
 
 DATABASE_URI = f"{settings.DB_NAME}://{settings.DB_HOST}:{settings.DB_PORT}"
@@ -17,5 +17,3 @@ users_collection = database.get_collection("users")
 
 # loop = motor_client.get_io_loop()
 # loop.run_until_complete(get_users())
-
-

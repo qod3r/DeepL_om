@@ -1,4 +1,6 @@
 from fastapi import APIRouter
+from app.users.dao import UsersDAO
+from app.database import motor_client
 
 router = APIRouter(
     prefix="/user",
@@ -6,12 +8,12 @@ router = APIRouter(
 )
 
 @router.get("/info")
-def get_user_info(current_user):
-    pass
+async def get_user_info():
+    await UsersDAO.find_by_id()
 
 @router.post("/reg")
-def register_user(user_data):
-    pass
+async def register_user(username):
+    await UsersDAO.add_user(username)
 
 @router.post("/login")
 def login_user(response, user_data):
