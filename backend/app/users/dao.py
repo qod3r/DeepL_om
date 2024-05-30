@@ -5,6 +5,10 @@ from beanie import Document
 
 users_collection = User
 
+#TODO: add update_user
+#TODO: add delete_user 
+#TODO: add find_all functions
+
 class UsersDAO:
     @classmethod
     async def find_one_or_none(cls, **filtered_by) -> User:

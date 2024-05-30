@@ -15,7 +15,6 @@ router = APIRouter(
 )
 
 @router.get("/info")
-#TODO: get current user info
 async def get_user_info(current_user: User = Depends(get_current_user)):
     return current_user
 
