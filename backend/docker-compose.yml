@@ -1,0 +1,21 @@
+version: '3.7'
+services:
+  db:
+    image: mongo:latest
+    container_name: 'backend_db'
+    env_file:
+      - .env-non-dev
+
+
+  app:
+    image: app_image
+    build: 
+      context: .
+    container_name: ct_scans_app
+    env_file:
+      - .env-non-dev
+    depends_on:
+      - db
+    command: ["/backend/docker/app.sh"]
+    ports:
+      - 9000:8000

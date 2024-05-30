@@ -5,4 +5,4 @@ studies/
 resized/
 yolo/
 backend/venv
-.env
+.env*
