@@ -8,4 +8,4 @@ backend/venv
 .env*
 backend/temp/
 backend/*.nii.gz
-backend/docker
+backend/docker/
