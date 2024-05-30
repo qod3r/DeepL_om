@@ -102,15 +102,18 @@ if __name__ == "__main__":
     from utils import study_to_temp_imgs
     from pprint import pprint
     
+    # папка для распаковки исследования, 1 раз
     TEMP_DIR = Path("temp/")
     
-    
+    # init модели, 1 раз
     model = ModelWrapper(Path("C:/back up/DeepL_om/ml/weights/v8medium_50epoch.pt"))
 
+    # а это при каждом запросе
     nii_study = Path("study_0509.nii.gz")
     nii_imgs = study_to_temp_imgs(nii_study, TEMP_DIR)
     
     masks = model.predict_tempdir(nii_imgs)
     
     pprint([(mask.slice_idx, mask.data.shape) for mask in masks])
+    # -----------------------------------
 
