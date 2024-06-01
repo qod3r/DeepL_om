@@ -15,9 +15,10 @@ redis = Redis()
 
 @celery.task
 def model_process(
-    file_stream: bytes
+    file_stream: bytes,
+    file_name: str
 ):
-    redis.set('processing', 'pending')
+    redis.set(f'{file_name}_status', 'pending')
     compressed_stream = BytesIO(file_stream)
     with GzipFile(
         fileobj=compressed_stream, mode='rb'
@@ -26,20 +27,20 @@ def model_process(
     compressed_stream.close()
     nifti_image = nib.nifti1.Nifti1Image.from_bytes(nifti_data.read())
     data = nifti_image.get_fdata()
-    redis.set('processing', 'file_read')
+    redis.set(f'{file_name}_status', 'file_read')
     paths = fdata_to_temp_imgs(data, Path('temp/'))
-    redis.set('processing', 'sent to model')
+    redis.set(f'{file_name}_status', 'sent to model')
     masks = model.predict_tempdir(paths)
-    redis.set('processing', 'got result from model')
+    redis.set(f'{file_name}_status', 'got result from model')
     dicted_masks = []
     for mask in masks:
         dicted_masks.append(mask.to_dict())
-    redis.set('processing', 'masks are ready')
+    redis.set(f'{file_name}_status', 'masks are ready')
     mask_file = {
         "file_hash": "hash",
         "masks_data": dicted_masks
     }
-    redis.set('processing', 'writing json')
-    with open ('temp_data/data.json', 'w') as f:
+    redis.set(f'{file_name}_status', 'writing json')
+    with open (f'temp_data/{file_name}_data.json', 'w') as f:
         json.dump(mask_file, f, indent=4)
-    redis.set('processing', 'done')
+    redis.set(f'{file_name}_status', 'done')

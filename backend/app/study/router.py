@@ -14,6 +14,7 @@ from app.users.models import Users
 from app.study.dao import StudiesDAO
 from app.tasks.tasks import model_process
 from app.study.get_status import status_generator
+from app.study.get_mask import send_mask
 
 from modellib.utils.convert import fdata_to_temp_imgs
 
@@ -24,8 +25,17 @@ router = APIRouter(
 )
 
 @router.get("/mask/{hash}")
-def get_mask(hash: str):
-    pass
+async def get_mask(hash: str):
+    study = await StudiesDAO.find_one_or_none(file_hash=hash)
+    if study:
+        with open(f'temp_data/study_0255_data.json', 'r') as f:
+            data = json.load(f)
+        json_string = json.dumps(data)
+        json_bytes = json_string.encode('utf-8')
+        return {
+           "data": json_bytes
+        }
+    
 
 @router.post("/upload")
 async def upload_study(
@@ -34,52 +44,22 @@ async def upload_study(
 ):
    if file.filename.endswith('_nii.gz'):
     file_stream = await file.read()
-    file_hash = sha256(file_stream).hexdigest()
+    file_hash = sha256().hexdigest()
 
     study_exists = await StudiesDAO.find_one_or_none(file_hash=file_hash)
     if study_exists:
        #TODO: return mask
-       return study_exists.mask_file_link
+        return {
+           "status": "exists"
+        }
+
     
-    model_process.delay(file_stream)
+    model_process.delay(file_stream, file_name=file.filename[:-7])
 
     return {
        "status": "processed"
     }
 
-    # nii_data = await get_data_from_nii_file(file_data)
-    # paths = fdata_to_temp_imgs(nii_data, Path('temp/'))
-    # masks = await model.predict_tempdir_async(paths)
-    # # end_time = time.time()
-    # mask_new = []
-    # for mask in masks:
-    #      mask_new.append(mask.to_dict())
-
-    # mask_file = {
-    #     "file_hash": "hash",
-    #     "masks_data": mask_new
-    # }
-
-    # with open ('temp_data/data.json', 'w') as f:
-    #     json.dump(mask_file, f, indent=4)
-
-    # file_path = os.path.abspath('temp_data/data.json')
-
-    # await StudiesDAO.add(
-    #     user_id=current_user.id,
-    #     file_hash=file_hash.hexdigest(),
-    #     mask_file_link=file_path,
-    #     study_date=datetime.now()
-    # )
-    
-
-    # return {
-    #     "status": "ok",
-    #     "file_hash": file_hash.hexdigest(),
-    #     "user_id": current_user.id,
-    #     "file_path": file_path
-    # }
-
-@router.get("/status")
-async def get_status(request: Request):
-    return StreamingResponse(status_generator(), media_type="text/event-stream")
+@router.get("/status/{file_name}")
+async def get_status(request: Request, file_name: str):
+    return StreamingResponse(status_generator(file_name), media_type="text/event-stream")
