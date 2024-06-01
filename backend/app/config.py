@@ -9,6 +9,6 @@ class Settings(BaseSettings):
 
     SECRET_KEY: str
     ALGORITHM: str
-
+    MODEL_PATH: str
 
 settings = Settings()

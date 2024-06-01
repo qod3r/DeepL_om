@@ -6,7 +6,7 @@ import PIL.Image
 from torch import Tensor
 from ultralytics import YOLO
 from ultralytics.engine.results import Results
-from utils import Slice
+from modellib.utils.convert import Slice
 
 from uuid import uuid4
 
