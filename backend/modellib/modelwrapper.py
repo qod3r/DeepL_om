@@ -156,22 +156,25 @@ if __name__ == "__main__":
     # а это при каждом запросе
     nii_study = Path("study_0509.nii.gz")
     nii_imgs = study_to_temp_imgs(nii_study, TEMP_DIR)
+    masks = model.predict_tempdir(nii_imgs)
     
     # или
     #   nii_study = <nib>.get_fdata()
     #   nii_imgs = fdata_to_temp_imgs(nii_study, TEMP_DIR)
+    #   masks = await model.predict_tempdir_async(nii_imgs)
 
-    # masks = model.predict_tempdir(nii_imgs)
-    # masks = model.predict_tempdir_async(nii_imgs)
     
-    async def run_prediction():
-        start_time = time.time()
-        masks = await model.predict_tempdir_async(nii_imgs, combine_masks=True)
-        end_time = time.time()
-        print(f"Prediction took {end_time - start_time:.2f} seconds")
-        print(f"Number of masks: {len(masks)}")
+    
+    
+    
+    # async def run_prediction():
+    #     start_time = time.time()
+    #     masks = await model.predict_tempdir_async(nii_imgs, combine_masks=True)
+    #     end_time = time.time()
+    #     print(f"Prediction took {end_time - start_time:.2f} seconds")
+    #     print(f"Number of masks: {len(masks)}")
 
-    asyncio.run(run_prediction())
+    # asyncio.run(run_prediction())
 
-    # pprint([(mask.slice_idx, mask.data.shape) for mask in masks])
+    pprint([(mask.slice_idx, mask.data.shape) for mask in masks])
     # -----------------------------------
