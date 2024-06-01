@@ -3,9 +3,8 @@ from io import BytesIO
 from fastapi import File, UploadFile
 import nibabel as nib
 
-async def get_data_from_nii_file(file: UploadFile):
-    compressed_data = await file.read()
-    compressed_stream = BytesIO(compressed_data)
+async def get_data_from_nii_file(file: bytes):
+    compressed_stream = BytesIO(file)
     with GzipFile(
         fileobj=compressed_stream, mode='rb'
     ) as decompressed_stream:
