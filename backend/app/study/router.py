@@ -1,13 +1,15 @@
 from io import BytesIO
-from fastapi import APIRouter, File, UploadFile
+from typing import List
+from fastapi import APIRouter, File, UploadFile, BackgroundTasks
 import nibabel as nib
 from gzip import GzipFile
-from modellib.utils.convert import study_to_temp_imgs
+from modellib.utils.convert import fdata_to_temp_imgs
 from modellib.modelwrapper import ModelWrapper
 from pathlib import Path
 from pprint import pprint
 import time
 from app.nn_model import model
+from app.processing.file_process import get_data_from_nii_file
 
 router = APIRouter(
     prefix="/study",
@@ -20,32 +22,13 @@ def get_mask(hash: str):
 
 @router.post("/upload")
 async def upload_study(
-    # file: UploadFile = File()
+    file: UploadFile = File()
 ):
-    # start_time = time.time()
-    # compressed_data = await file.read()
-    # compressed_stream = BytesIO(compressed_data)
-    # with GzipFile(
-    #     fileobj=compressed_stream, mode='rb'
-    # ) as decompressed_stream:
-    #     nifti_data = BytesIO(decompressed_stream.read())
-    # compressed_stream.close()
-    # nifti_image = nib.nifti1.Nifti1Image.from_bytes(nifti_data.read())
-    # data = nifti_image.get_fdata()
+    nii_data = await get_data_from_nii_file(file)
+    paths = fdata_to_temp_imgs(nii_data, Path('temp/'))
+    masks = await model.predict_tempdir_async(paths)
     
-    # print(file.filename[:-7])
-
-    # paths = study_to_temp_imgs(file_name=file.filename[:-7], data=data, save_dir=Path('temp/'))
-    # model = ModelWrapper(Path('C:/Users/HYPERPC/Code/diploma/DeepL_om/ml/weights/v8medium_50epoch.pt'))
-
-    # masks = model.predict_tempdir(paths)
-    # pprint([(mask.slice_idx, mask.data.shape) for mask in masks])
-    # end_time = time.time()
-    # return {
-    #     "time": end_time - start_time
-    # }
-
-    pass
+    
     
 
 @router.get("/status/{hash}")

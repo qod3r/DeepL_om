@@ -143,7 +143,7 @@ class ModelWrapper:
 
 
 if __name__ == "__main__":
-    from utils import study_to_temp_imgs, fdata_to_temp_imgs
+    from modellib.utils.convert import study_to_temp_imgs, fdata_to_temp_imgs
     from pprint import pprint
     import time
 
