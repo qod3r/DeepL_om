@@ -1,27 +1,14 @@
-from beanie import Document
-from bson import ObjectId
-from typing import Optional
+from sqlalchemy import Column, Integer, String
 
-class User(Document):
-    _id: ObjectId
-    username: str
-    lastname: Optional[str] = None
-    name: Optional[str] = None
-    patronymic: Optional[str] = None
-    post: Optional[str] = None
-    password: str
+from app.database import Base
 
-    class Config:
-        json_schema_extra = {
-            "example": {
-                "username": "username",
-                "lastname": "Иванов",
-                "name": "Иван",
-                "patronymic": "Иванович",
-                "post": "Врач",
-                "password": "hashed-password"
-            }
-        }
+class Users(Base):
+    __tablename__ = "users"
 
-    class Settings:
-        name = "users"
+    id = Column(Integer, primary_key=True)
+    username = Column(String, unique=True)
+    lastname = Column(String, nullable=False)
+    name = Column(String, nullable=False)
+    patronymic = Column(String, nullable=True)
+    post = Column(String, nullable=False)
+    password = Column(String, nullable=False)

@@ -1,15 +1,4 @@
-from io import BytesIO
-from typing import List
-from fastapi import APIRouter, File, UploadFile, BackgroundTasks
-import nibabel as nib
-from gzip import GzipFile
-from modellib.utils.convert import fdata_to_temp_imgs
-from modellib.modelwrapper import ModelWrapper
-from pathlib import Path
-from pprint import pprint
-import time
-from app.nn_model import model
-from app.processing.file_process import get_data_from_nii_file
+from fastapi import APIRouter, File, UploadFile
 
 router = APIRouter(
     prefix="/study",
@@ -22,14 +11,25 @@ def get_mask(hash: str):
 
 @router.post("/upload")
 async def upload_study(
-    file: UploadFile = File()
+    # file: UploadFile = File()
 ):
-    nii_data = await get_data_from_nii_file(file)
-    paths = fdata_to_temp_imgs(nii_data, Path('temp/'))
-    masks = await model.predict_tempdir_async(paths)
+    #TODO: check that file is valid
+    # file_bytes = await file.read()
+    # file_hash = sha256(file_bytes)
+    # nii_data = await get_data_from_nii_file(file)
+    # paths = fdata_to_temp_imgs(nii_data, Path('temp/'))
+    # masks = await model.predict_tempdir_async(paths)
+
+    # mask_new = []
+
+    # for mask in masks:
+    #     mask_new.append(json.dumps(mask.to_dict()).encode('utf-8'))
+
     
     
-    
+    # await StudiesDAO.add_one(study=study)
+    pass
+
 
 @router.get("/status/{hash}")
 def get_status(hash: str):

@@ -30,6 +30,13 @@ class Mask:
             return self.data + other.data
         except:
             return self
+        
+    def to_dict(self):
+        return {
+            "data": self.data.tolist(),
+            "slice_idx": self.slice_idx
+        }
+        
 
 
 # data for entire study

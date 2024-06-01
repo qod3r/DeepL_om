@@ -1,21 +1,6 @@
-#from app.database import users_collection
-from bson.objectid import ObjectId
-from app.users.models import User
-from beanie import Document
+from app.dao.base import BaseDAO
+from app.users.models import Users
 
-users_collection = User
 
-#TODO: add update_user
-#TODO: add delete_user 
-#TODO: add find_all functions
-
-class UsersDAO:
-    @classmethod
-    async def find_one_or_none(cls, **filtered_by) -> User:
-        user = await users_collection.find_one(filtered_by)
-        return user
-    
-    @classmethod
-    async def add_user(cls, user: User):
-        await user.create()
-        
+class UsersDAO(BaseDAO):
+    model = Users

@@ -8,3 +8,5 @@ backend/venv
 .env*
 backend/temp/
 backend/*.nii.gz
+backend/app/migrations/
+backend/alembic.ini
