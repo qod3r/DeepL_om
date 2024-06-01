@@ -45,7 +45,7 @@ def study_to_temp_imgs(
     dir_suffix: str = uuid4().hex,
     window_center=-600,
     window_width=1200,
-) -> list[Path]: 
+) -> list[Path]:
     save_dir = save_dir / Path(dir_suffix)
     print(f"save dir: {save_dir}")
     save_dir.mkdir(parents=True, exist_ok=True)
@@ -63,6 +63,31 @@ def study_to_temp_imgs(
     for slice_idx in range(data.shape[2]):
         # out_file = save_dir / f"{nii_file.stem.split('.')[0]}_slice{slice_idx}.png"
         out_file = save_dir / f"{file_name}_slice{slice_idx}.png"
+
+        imsave(str(out_file), data[:, :, slice_idx])
+        res.append(out_file)
+    return res
+
+
+def fdata_to_temp_imgs(
+    data,
+    save_dir: Path,
+    dir_suffix: str = uuid4().hex,
+    window_center=-600,
+    window_width=1200,
+) -> list[Path]:
+    
+    save_dir = save_dir / Path(dir_suffix)
+    save_dir.mkdir(parents=True, exist_ok=True)
+    print(f"save dir: {save_dir}")
+    
+    res: list[Path] = []
+
+    data = (data - (window_center - window_width / 2)) / window_width * 255
+    data = data.clip(0, 255).astype("uint8")
+
+    for slice_idx in range(data.shape[2]):
+        out_file = save_dir / f"slice{slice_idx}.png"
 
         imsave(str(out_file), data[:, :, slice_idx])
         res.append(out_file)

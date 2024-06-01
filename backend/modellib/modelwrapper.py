@@ -8,7 +8,9 @@ from ultralytics import YOLO
 from ultralytics.engine.results import Results
 from modellib.utils.convert import Slice
 
+import asyncio
 from uuid import uuid4
+
 
 # data for one slice
 class Mask:
@@ -43,7 +45,7 @@ class ModelWrapper:
 
     def predict(self, slices: list[Slice]) -> list[list[Mask]]:
         pred = []
-        
+
         self.is_processing = True
         for idx, slice in enumerate(slices):
             self.progress = idx / len(slices)
@@ -53,67 +55,126 @@ class ModelWrapper:
                 slice.data = PIL.Image.fromarray(slice.data).convert("RGB")
                 print(f"Slice {slice.idx}:")
                 results: list[Results] = self.model.predict(slice.data)
-            
+
             for ridx, result in enumerate(results):
                 if len(result):
                     print(f"\t{ridx=} {len(result)=}")
                     for midx, mask in enumerate(result.masks.data):
                         print(f"\t\t{midx=} {sum(sum(mask))=}")
                         # masks.append(Mask(data=mask, slice_idx=idx))
-        
-        
+
         self.is_processing = False
         self.progress = 0
         return pred
 
-    def predict_tempdir(self, slices: list[Path], combine_masks: bool = True) -> list[Mask]:
+    def predict_tempdir(
+        self, slices: list[Path], combine_masks: bool = True
+    ) -> list[Mask]:
         pred = []
-        
+
         self.is_processing = True
         for idx, slice in enumerate(slices):
             self.progress = idx / len(slices)
             results: list[Results] = self.model.predict(slice)
-            
+
             # skip 0 detections
             if not len(results[0]):
                 continue
-            
+
             combined: list[Tensor | np.ndarray] = []
             separate: list[Mask] = []
-            
+
             for midx, mask in enumerate(results[0].masks.data):
                 combined.append(mask)
                 separate.append(Mask(data=mask, slice_idx=idx))
-        
+
             # combine all slice masks into one
             combined = sum(combined)
             combined_mask = Mask(data=combined, slice_idx=idx)
-        
+
             if combine_masks:
                 pred.append(combined_mask)
             else:
                 pred.extend(separate)
-            
+
         self.is_processing = False
         self.progress = 0
         return pred
 
+    async def predict_tempdir_async(
+        self, slices: list[Path], combine_masks: bool = True
+    ) -> list[Mask]:
+        pred = []
+        self.is_processing = True
+
+        tasks = [self._predict_slice_tempdir(slice, idx) for idx, slice in enumerate(slices)]
+        results = await asyncio.gather(*tasks)
+
+        for idx, (slice_results, slice_idx) in enumerate(results):
+            self.progress = idx / len(slices)
+
+            if not len(slice_results[0]):
+                continue
+
+            combined: list[Tensor | np.ndarray] = []
+            separate: list[Mask] = []
+
+            for midx, mask in enumerate(slice_results[0].masks.data):
+                combined.append(mask)
+                separate.append(Mask(data=mask, slice_idx=slice_idx))
+
+            combined = sum(combined)
+            combined_mask = Mask(data=combined, slice_idx=slice_idx)
+
+            if combine_masks:
+                pred.append(combined_mask)
+            else:
+                pred.extend(separate)
+
+        self.is_processing = False
+        self.progress = 0
+        return pred
+
+    async def _predict_slice_tempdir(
+        self, slice: Path, slice_idx: int
+    ) -> tuple[list[Results], int]:
+        results = self.model.predict(slice)
+        return results, slice_idx
+
+
 if __name__ == "__main__":
-    from utils import study_to_temp_imgs
+    from utils import study_to_temp_imgs, fdata_to_temp_imgs
     from pprint import pprint
-    
+    import time
+
     # папка для распаковки исследования, 1 раз
     TEMP_DIR = Path("temp/")
-    
+
     # init модели, 1 раз
     model = ModelWrapper(Path("C:/back up/DeepL_om/ml/weights/v8medium_50epoch.pt"))
 
     # а это при каждом запросе
     nii_study = Path("study_0509.nii.gz")
     nii_imgs = study_to_temp_imgs(nii_study, TEMP_DIR)
-    
     masks = model.predict_tempdir(nii_imgs)
     
+    # или
+    #   nii_study = <nib>.get_fdata()
+    #   nii_imgs = fdata_to_temp_imgs(nii_study, TEMP_DIR)
+    #   masks = await model.predict_tempdir_async(nii_imgs)
+
+    
+    
+    
+    
+    # async def run_prediction():
+    #     start_time = time.time()
+    #     masks = await model.predict_tempdir_async(nii_imgs, combine_masks=True)
+    #     end_time = time.time()
+    #     print(f"Prediction took {end_time - start_time:.2f} seconds")
+    #     print(f"Number of masks: {len(masks)}")
+
+    # asyncio.run(run_prediction())
+
     pprint([(mask.slice_idx, mask.data.shape) for mask in masks])
     # -----------------------------------
-
