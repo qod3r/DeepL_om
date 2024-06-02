@@ -1,6 +1,6 @@
 from hashlib import sha256
 import os
-from fastapi import APIRouter, Depends, File, Request, UploadFile
+from fastapi import APIRouter, Depends, File, HTTPException, Request, UploadFile, status
 import json
 from pathlib import Path
 import time
@@ -33,8 +33,20 @@ async def get_mask(hash: str):
         json_string = json.dumps(data)
         json_bytes = json_string.encode('utf-8')
         return {
+           "status_code": "200",
+           "response_type": "success",
+           "description": "Маска отправлена",
            "data": json_bytes
         }
+    raise HTTPException(
+        status_code=status.HTTP_404_NOT_FOUND,
+        detail= {
+        "status_code": "404",
+        "response_type": "error",
+        "description": "Нет маски для файла с таким хэшом",
+        "data": None
+        }
+    )
     
 
 @router.post("/upload")
@@ -44,20 +56,35 @@ async def upload_study(
 ):
    if file.filename.endswith('_nii.gz'):
     file_stream = await file.read()
-    file_hash = sha256().hexdigest()
+    file_hash = sha256(file_stream).hexdigest() #!
 
     study_exists = await StudiesDAO.find_one_or_none(file_hash=file_hash)
     if study_exists:
-       #TODO: return mask
         return {
-           "status": "exists"
+           "status_code": "200",
+           "response_type": "success",
+           "description": "Такая маска уже существует, её можно получить по хэшу",
+           "data": {
+              "file_hash": file_hash
+           }
         }
 
-    
     model_process.delay(file_stream, file_name=file.filename[:-7])
+    
+    await StudiesDAO.add(
+       user_id=current_user.id,
+       file_hash=file_hash,
+       mask_file_link=os.path.abspath(f'temp_data/{file.filename[:-7]}_data.json'),
+       study_date=datetime.now()
+    )
 
     return {
-       "status": "processed"
+        "status_code": "200",
+        "response_type": "success",
+        "description": "Файл отправлен в модель, он будет готов совсем скоро",
+        "data": {
+            "file_hash": file_hash
+        }
     }
 
 @router.get("/status/{file_name}")

@@ -8,6 +8,7 @@ from redis import Redis
 
 from app.tasks.celery import celery
 from app.nn_model import model
+from app.study.dao import StudiesDAO
 from modellib.utils.convert import fdata_to_temp_imgs
 
 
@@ -16,7 +17,7 @@ redis = Redis()
 @celery.task
 def model_process(
     file_stream: bytes,
-    file_name: str
+    file_name: str,
 ):
     redis.set(f'{file_name}_status', 'pending')
     compressed_stream = BytesIO(file_stream)
