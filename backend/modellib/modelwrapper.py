@@ -1,15 +1,15 @@
+import asyncio
 from pathlib import Path
 from typing import Self
+from uuid import uuid4
 
 import numpy as np
 import PIL.Image
+from skimage.transform import resize
 from torch import Tensor
 from ultralytics import YOLO
 from ultralytics.engine.results import Results
 from utils import Slice
-
-import asyncio
-from uuid import uuid4
 
 
 # data for one slice
@@ -20,6 +20,15 @@ class Mask:
 
     def as_tuple(self):
         return (self.slice_idx, self.data)
+    
+    def resize(self, dims: tuple[int, int]) -> Self:
+        """Returns a resized copy of itself"""
+        
+        if dims is None:
+            return self
+        
+        return Mask(resize(self.data.numpy(), dims), self.slice_idx)
+        
 
     def __add__(self, other: Self):
         return self.data + other.data
@@ -143,9 +152,10 @@ class ModelWrapper:
 
 
 if __name__ == "__main__":
-    from utils import study_to_temp_imgs, fdata_to_temp_imgs
-    from pprint import pprint
     import time
+    from pprint import pprint
+
+    from utils import fdata_to_temp_imgs, study_to_temp_imgs
 
     # папка для распаковки исследования, 1 раз
     TEMP_DIR = Path("temp/")
@@ -157,16 +167,15 @@ if __name__ == "__main__":
     nii_study = Path("study_0509.nii.gz")
     nii_imgs = study_to_temp_imgs(nii_study, TEMP_DIR)
     masks = model.predict_tempdir(nii_imgs)
-    
     # или
     #   nii_study = <nib>.get_fdata()
     #   nii_imgs = fdata_to_temp_imgs(nii_study, TEMP_DIR)
     #   masks = await model.predict_tempdir_async(nii_imgs)
 
-    
-    
-    
-    
+
+    pprint(masks[0].data.shape)
+    pprint(masks[0].resize((512, 512)).data.shape)
+        
     # async def run_prediction():
     #     start_time = time.time()
     #     masks = await model.predict_tempdir_async(nii_imgs, combine_masks=True)
