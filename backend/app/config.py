@@ -13,5 +13,7 @@ class Settings(BaseSettings):
     ALGORITHM: str
     MODEL_PATH: str
     BROKER_URL: str
+    #S3_ACCESS_KEY: str
+    #S3_SECRET_KEY: str
 
 settings = Settings()
