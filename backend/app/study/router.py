@@ -24,12 +24,23 @@ router = APIRouter(
     tags=["Studies"]
 )
 
-@router.get("/mask/{hash}")
-async def get_mask(hash: str):
-    study = await StudiesDAO.find_one_or_none(file_hash=hash)
+@router.get("/mask/{file_hash}")
+async def get_mask(file_hash: str):
+    study = await StudiesDAO.find_one_or_none(file_hash=file_hash)
     if study:
-        with open(f'temp_data/study_0255_data.json', 'r') as f:
-            data = json.load(f)
+        try:
+            with open(study.mask_file_link, 'r') as f:
+                data = json.load(f) 
+        except Exception as e:
+            return HTTPException(
+                status_code=status.HTTP_404_NOT_FOUND,
+                detail={
+                    "status_code": "404",
+                    "response_type": "error",
+                    "description": "Файла с маской ПОКА ЧТО нет",
+                    "data": None
+                }
+            )
         json_string = json.dumps(data)
         json_bytes = json_string.encode('utf-8')
         return {
@@ -69,12 +80,15 @@ async def upload_study(
            }
         }
 
-    model_process.delay(file_stream, file_name=file.filename[:-7])
-    
+    model_process.delay(
+       file_stream=file_stream,
+       file_hash=file_hash
+    )
+
     await StudiesDAO.add(
        user_id=current_user.id,
        file_hash=file_hash,
-       mask_file_link=os.path.abspath(f'temp_data/{file.filename[:-7]}_data.json'),
+       mask_file_link=os.path.abspath(f'local_data_store/{file_hash}_data.json'),
        study_date=datetime.now()
     )
 
@@ -87,6 +101,6 @@ async def upload_study(
         }
     }
 
-@router.get("/status/{file_name}")
-async def get_status(request: Request, file_name: str):
-    return StreamingResponse(status_generator(file_name), media_type="text/event-stream")
+@router.get("/status/{file_hash}")
+async def get_status(request: Request, file_hash: str):
+    return StreamingResponse(status_generator(file_hash), media_type="text/event-stream")
