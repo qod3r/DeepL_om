@@ -1,18 +1,17 @@
-import motor.motor_asyncio
+from sqlalchemy.ext.asyncio import AsyncSession, create_async_engine
+from sqlalchemy.orm import DeclarativeBase, sessionmaker
+
 from app.config import settings
-from beanie import init_beanie
-from app.users.models import User
 
-DATABASE_URI = f"{settings.DB_NAME}://{settings.DB_HOST}:{settings.DB_PORT}"
+DATABASE_URL = f"postgresql+asyncpg://{settings.DB_USER}:{settings.DB_PASS}@{settings.DB_HOST}:{settings.DB_PORT}/{settings.DB_NAME}"
 
-motor_client = motor.motor_asyncio.AsyncIOMotorClient(DATABASE_URI)
+# Движок для бд
+engine = create_async_engine(DATABASE_URL)
 
-database = motor_client.studies
+# Фабрика сессий бд
+async_session_maker = sessionmaker(engine, class_=AsyncSession, expire_on_commit=False)
 
-users_collection = database.get_collection("users")
-
-async def init_database():
-    await init_beanie(
-        database=database,
-        document_models=[User]
-    )
+# class for megrations
+# Класс, кторый аккумулирует все данные о моделях ORM
+class Base(DeclarativeBase):
+    pass

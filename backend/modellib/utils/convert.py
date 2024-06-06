@@ -9,6 +9,7 @@ from skimage.io import imsave
 from pydicom import dcmread
 from pydicom.data import get_testdata_file
 from uuid import uuid4
+from numpy import ndarray
 
 
 class Slice:
@@ -17,18 +18,18 @@ class Slice:
         self.idx = idx
 
 
-def study_to_slices(file: Path, type: Literal["nii", "dcm"]) -> list[Slice]:
-    data = None
+def study_to_slices(data: ndarray, type: Literal["nii", "dcm"] = None) -> list[Slice]:
+    # data = None
     slices = []
 
-    if type == "nii":
-        img = nib.load(file)
-        data = img.get_fdata()
-    elif type == "dcm":
-        path = get_testdata_file(file)
-        data = dcmread(path).pixel_array
-    if data is None:
-        return []
+    # if type == "nii":
+    #     img = nib.load(file)
+    #     data = img.get_fdata()
+    # elif type == "dcm":
+    #     path = get_testdata_file(file)
+    #     data = dcmread(path).pixel_array
+    # if data is None:
+    #     return []
 
     for slice_idx in range(data.shape[2]):
         slices.append(Slice(data[:, :, slice_idx], idx=slice_idx))
@@ -37,8 +38,10 @@ def study_to_slices(file: Path, type: Literal["nii", "dcm"]) -> list[Slice]:
 
 
 def study_to_temp_imgs(
-    nii_file: Path,
+    #nii_file: Path,
     save_dir: Path,
+    file_name: str,
+    data: ndarray,
     dir_suffix: str = uuid4().hex,
     window_center=-600,
     window_width=1200,
@@ -49,16 +52,17 @@ def study_to_temp_imgs(
     res: list[Path] = []
 
     # Load the .nii file
-    img = nib.load(str(nii_file))
+    # img = nib.load(str(nii_file))
 
     # Get the image data
-    data = img.get_fdata()
+    # data = img.get_fdata()
 
     data = (data - (window_center - window_width / 2)) / window_width * 255
     data = data.clip(0, 255).astype("uint8")
 
     for slice_idx in range(data.shape[2]):
-        out_file = save_dir / f"{nii_file.stem.split('.')[0]}_slice{slice_idx}.png"
+        # out_file = save_dir / f"{nii_file.stem.split('.')[0]}_slice{slice_idx}.png"
+        out_file = save_dir / f"{file_name}_slice{slice_idx}.png"
 
         imsave(str(out_file), data[:, :, slice_idx])
         res.append(out_file)

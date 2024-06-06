@@ -9,7 +9,10 @@ from skimage.transform import resize
 from torch import Tensor
 from ultralytics import YOLO
 from ultralytics.engine.results import Results
-from utils import Slice
+from modellib.utils.convert import Slice
+
+import asyncio
+from uuid import uuid4
 
 
 # data for one slice
@@ -39,6 +42,13 @@ class Mask:
             return self.data + other.data
         except:
             return self
+        
+    def to_dict(self):
+        return {
+            "data": self.data.tolist(),
+            "slice_idx": self.slice_idx
+        }
+        
 
 
 # data for entire study
@@ -152,7 +162,7 @@ class ModelWrapper:
 
 
 if __name__ == "__main__":
-    import time
+    from modellib.utils.convert import study_to_temp_imgs, fdata_to_temp_imgs
     from pprint import pprint
 
     from utils import fdata_to_temp_imgs, study_to_temp_imgs

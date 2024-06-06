@@ -1,16 +1,24 @@
 from fastapi import FastAPI
+from fastapi.middleware.cors import CORSMiddleware
+
 from app.users.router import router as router_users
 from app.study.router import router as router_studies
-from app.main_page.router import router as router_main_page
-from app.database import init_database
 
 app = FastAPI()
 
-@app.on_event("startup")
-async def start_database():
-    await init_database()
-
 app.include_router(router_users)
 app.include_router(router_studies)
-app.include_router(router_main_page)
 
+origins = [
+    "http://localhost:8000", #Вместо 8000 указываешь порт на котором React 5173
+    "http://127.0.0.1:8000",
+    "http://0.0.0.0:8000"
+]
+
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=True,
+    allow_credential=True,
+    allow_methods=["*"],
+    allow_headers=["*"],
+)
